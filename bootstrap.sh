@@ -2,11 +2,13 @@
 set -euo pipefail
 
 PROJECT_NAME="warp"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="/var/log/${PROJECT_NAME}"
 LOG_FILE="${LOG_DIR}/bootstrap.log"
 ENV_DIR="/etc/${PROJECT_NAME}"
 ENV_FILE="${ENV_DIR}/env"
-DEPLOY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/deploy"
+DEPLOY_DIR="${ROOT_DIR}/deploy"
+CONFIG_EXAMPLE="${ROOT_DIR}/config/device3.yaml.example"
 
 usage() {
   cat <<'EOF'
@@ -125,12 +127,21 @@ if [[ ${#missing_vars[@]} -gt 0 ]]; then
   for var in "${missing_vars[@]}"; do
     echo "  - ${var}" >&2
   done
+  if printf '%s\n' "${missing_vars[@]}" | grep -q '^APP_REPO_URL$'; then
+    echo "Set APP_REPO_URL in ${ENV_FILE} if you need to override." >&2
+  fi
   exit 1
 fi
 
 if [[ ! -f "$DEVICE_CONFIG" ]]; then
+  if [[ -f "$CONFIG_EXAMPLE" ]]; then
+    install -m 0640 "$CONFIG_EXAMPLE" "$DEVICE_CONFIG"
+    print_fail "Device config created at ${DEVICE_CONFIG} from example."
+    echo "  Edit it and re-run bootstrap." >&2
+    exit 1
+  fi
   print_fail "Missing device config: ${DEVICE_CONFIG}"
-  echo "  Copy from config/device3.yaml.example and edit locally." >&2
+  echo "  Example not found at ${CONFIG_EXAMPLE}" >&2
   exit 1
 fi
 

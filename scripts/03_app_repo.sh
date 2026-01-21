@@ -15,7 +15,7 @@ set +a
 for var in APP_REPO_URL APP_DIR APP_REF; do
   if [[ -z "${!var:-}" ]]; then
     echo "${var} is not set in ${ENV_FILE}" >&2
-    exit 1
+    exit 2
   fi
 done
 
@@ -27,6 +27,8 @@ fi
 if [[ ! -d "$APP_DIR" ]]; then
   mkdir -p "$APP_DIR"
   git clone "$APP_REPO_URL" "$APP_DIR"
+else
+  git -C "$APP_DIR" remote set-url origin "$APP_REPO_URL"
 fi
 
 if [[ ! -d "${APP_DIR}/.git" ]]; then
@@ -34,25 +36,17 @@ if [[ ! -d "${APP_DIR}/.git" ]]; then
   exit 1
 fi
 
-git -C "$APP_DIR" fetch --all --tags
+git -C "$APP_DIR" fetch --all --tags --prune
 
-resolve_ref() {
-  local ref="$1"
-  if git -C "$APP_DIR" rev-parse --verify "${ref}^{commit}" >/dev/null 2>&1; then
-    echo "$ref"
-    return 0
-  fi
-  if git -C "$APP_DIR" rev-parse --verify "origin/${ref}^{commit}" >/dev/null 2>&1; then
-    echo "origin/${ref}"
-    return 0
-  fi
-  return 1
-}
+# Reset any local changes to keep provisioning deterministic.
+git -C "$APP_DIR" reset --hard
 
-target_ref="$(resolve_ref "$APP_REF")" || {
-  echo "Unable to resolve ref: $APP_REF" >&2
-  exit 1
-}
+if git -C "$APP_DIR" show-ref --verify --quiet "refs/remotes/origin/${APP_REF}"; then
+  git -C "$APP_DIR" checkout --force -B "$APP_REF" "origin/${APP_REF}"
+  git -C "$APP_DIR" reset --hard "origin/${APP_REF}"
+else
+  git -C "$APP_DIR" checkout --force "$APP_REF"
+  git -C "$APP_DIR" reset --hard "$APP_REF"
+fi
 
-git -C "$APP_DIR" checkout --force "$target_ref"
-git -C "$APP_DIR" reset --hard "$target_ref"
+echo "Checked out $(git -C "$APP_DIR" rev-parse --short HEAD)"
