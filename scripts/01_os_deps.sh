@@ -3,9 +3,13 @@ set -euo pipefail
 
 MODE="${1:---prod}"
 NO_HW="false"
+VNC="false"
 
 if [[ "${2:-}" == "--no-hw" ]]; then
   NO_HW="true"
+fi
+if [[ "${2:-}" == "--vnc" ]] || [[ "${3:-}" == "--vnc" ]]; then
+  VNC="true"
 fi
 
 export DEBIAN_FRONTEND=noninteractive
@@ -34,7 +38,6 @@ network_packages=(
 )
 
 ui_packages=(
-  realvnc-vnc-server
 )
 
 hw_packages=(
@@ -54,7 +57,7 @@ if [[ ${#missing_packages[@]} -gt 0 ]]; then
   apt-get install -y "${missing_packages[@]}"
 fi
 
-if [[ "$MODE" == "--dev" ]]; then
+if [[ "$VNC" == "true" ]]; then
   missing_ui=()
   for pkg in "${ui_packages[@]}"; do
     if ! dpkg -s "$pkg" >/dev/null 2>&1; then

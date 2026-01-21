@@ -40,6 +40,11 @@ sudo ./bootstrap.sh --prod --app-ref v1.2.3
 - Development:
 ```
 sudo ./bootstrap.sh --dev --app-ref main
+
+Optional VNC install:
+```
+sudo ./bootstrap.sh --prod --vnc --app-ref v1.2.3
+```
 ```
 
 ## Logs

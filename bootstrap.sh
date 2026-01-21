@@ -12,11 +12,12 @@ CONFIG_EXAMPLE="${ROOT_DIR}/config/device3.yaml.example"
 
 usage() {
   cat <<'EOF'
-Usage: ./bootstrap.sh [--prod|--dev] [--no-hw] --app-ref <ref>
+Usage: ./bootstrap.sh [--prod|--dev] [--no-hw] [--vnc] --app-ref <ref>
 
   --prod     Run in production mode (default)
   --dev      Run in development mode
   --no-hw    Skip hardware enablement step
+  --vnc      Install VNC server
   --app-ref  App git tag/commit/branch to checkout
 EOF
 }
@@ -24,6 +25,7 @@ EOF
 MODE="--prod"
 NO_HW="false"
 APP_REF=""
+VNC="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -37,6 +39,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-hw)
       NO_HW="true"
+      shift
+      ;;
+    --vnc)
+      VNC="true"
       shift
       ;;
     --app-ref)
@@ -175,8 +181,12 @@ for script in "${SCRIPTS[@]}"; do
     exit 1
   fi
   print_header "Running ${script}"
-  if [[ "$NO_HW" == "true" ]]; then
+  if [[ "$NO_HW" == "true" && "$VNC" == "true" ]]; then
+    "$script" "$MODE" "--no-hw" "--vnc"
+  elif [[ "$NO_HW" == "true" ]]; then
     "$script" "$MODE" "--no-hw"
+  elif [[ "$VNC" == "true" ]]; then
+    "$script" "$MODE" "--vnc"
   else
     "$script" "$MODE"
   fi
