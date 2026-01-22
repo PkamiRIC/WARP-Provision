@@ -2,6 +2,8 @@
 set -euo pipefail
 
 CONFIG_FILES=("/boot/config.txt" "/boot/firmware/config.txt")
+SPI_OVERLAY_LINE="dtoverlay=spi0-2cs,cs0_pin=7,cs1_pin=8"
+SC16_OVERLAY_LINE="dtoverlay=sc16is752-spi1-rpiplc-v4,xtal=14745600"
 
 log() {
   echo "[hw] $*"
@@ -38,6 +40,17 @@ enable_kernel_module() {
   modprobe "$module" || true
 }
 
+ensure_overlay_line() {
+  local file="$1"
+  local line="$2"
+  if [[ ! -f "$file" ]]; then
+    return
+  fi
+  if ! grep -qF "$line" "$file"; then
+    echo "$line" >> "$file"
+  fi
+}
+
 require_root
 
 if command -v raspi-config >/dev/null 2>&1; then
@@ -50,6 +63,8 @@ else
     set_config_kv "$cfg" "dtparam=i2c_arm" "on"
     set_config_kv "$cfg" "dtparam=spi" "on"
     set_config_kv "$cfg" "enable_uart" "1"
+    ensure_overlay_line "$cfg" "$SPI_OVERLAY_LINE"
+    ensure_overlay_line "$cfg" "$SC16_OVERLAY_LINE"
   done
 fi
 
