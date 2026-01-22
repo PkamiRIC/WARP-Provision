@@ -18,6 +18,10 @@ PLC_SO_NAME="${PLC_SO_NAME:-librpiplc.so}"
 PLC_PY_MODULE="${PLC_PY_MODULE:-}"
 GPIO_TEST_CMD="${GPIO_TEST_CMD:-}"
 PY_IMPORT_MODULE="${PY_IMPORT_MODULE:-src.main}"
+APP_DIR="${APP_DIR:-}"
+VENV_DIR="${VENV_DIR:-}"
+PYTHON_BIN="${VENV_DIR:+${VENV_DIR}/bin/python}"
+PYTHON_BIN="${PYTHON_BIN:-python}"
 
 fail() {
   echo "[smoke] FAIL: $*" >&2
@@ -30,7 +34,10 @@ log() {
 
 check_python_imports() {
   log "Checking Python imports"
-  python - <<PY || exit 1
+  if [[ -n "$APP_DIR" ]]; then
+    export PYTHONPATH="${APP_DIR}/devices/device3:${PYTHONPATH:-}"
+  fi
+  "$PYTHON_BIN" - <<PY || exit 1
 import importlib
 importlib.import_module("${PY_IMPORT_MODULE}")
 PY
