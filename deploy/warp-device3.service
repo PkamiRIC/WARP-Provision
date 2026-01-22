@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=${APP_DIR}/devices/device3
-ExecStart=${VENV_DIR}/bin/python -m src.main --config ${DEVICE_CONFIG}
+WorkingDirectory=/opt/warp/app/devices/device3
+ExecStart=/opt/warp/venv/bin/python -m src.main --config /etc/warp/device3.yaml
 Restart=always
 EnvironmentFile=/etc/warp/env
 
