@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/warp/app/dashboard
-ExecStart=/usr/bin/npm run preview -- --host 0.0.0.0 --port ${UI_DASHBOARD_PORT}
+ExecStart=/usr/bin/npm run preview -- --host 0.0.0.0 --port $UI_DASHBOARD_PORT
 Restart=always
 EnvironmentFile=/etc/warp/env
 Environment=NODE_ENV=production
