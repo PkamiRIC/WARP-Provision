@@ -24,11 +24,11 @@ if [[ "$NO_UI" == "true" ]]; then
 fi
 
 APP_DIR="${APP_DIR:-/opt/warp/app}"
-UI_API_BASE="${UI_API_BASE:-http://localhost:8003}"
-UI_ENABLE_WARP_CONSOLE="${UI_ENABLE_WARP_CONSOLE:-true}"
-UI_ENABLE_DASHBOARD="${UI_ENABLE_DASHBOARD:-true}"
+UI_ENABLE_DEVICE1="${UI_ENABLE_DEVICE1:-true}"
+UI_ENABLE_DEVICE2="${UI_ENABLE_DEVICE2:-true}"
+UI_ENABLE_DEVICE3="${UI_ENABLE_DEVICE3:-true}"
 
-if [[ "$UI_ENABLE_WARP_CONSOLE" != "true" && "$UI_ENABLE_DASHBOARD" != "true" ]]; then
+if [[ "$UI_ENABLE_DEVICE1" != "true" && "$UI_ENABLE_DEVICE2" != "true" && "$UI_ENABLE_DEVICE3" != "true" ]]; then
   echo "[ui] UI disabled via env"
   exit 0
 fi
@@ -60,32 +60,39 @@ install_node_deps() {
   fi
 }
 
-build_warp_console() {
-  local dir="${APP_DIR}/ui/warp-console"
+build_console() {
+  local dir="$1"
   if [[ ! -d "$dir" ]]; then
-    echo "[ui] Missing ${dir}, skipping warp-console"
+    echo "[ui] Missing ${dir}, skipping"
     return
   fi
-  echo "[ui] Building warp-console"
+  echo "[ui] Building ${dir}"
   install_node_deps "$dir"
-  NEXT_PUBLIC_API_BASE="$UI_API_BASE" npm --prefix "$dir" run build
+  npm --prefix "$dir" run build
 }
 
 build_dashboard() {
-  local dir="${APP_DIR}/dashboard"
+  local dir="$1"
   if [[ ! -d "$dir" ]]; then
-    echo "[ui] Missing ${dir}, skipping dashboard"
+    echo "[ui] Missing ${dir}, skipping"
     return
   fi
-  echo "[ui] Building dashboard"
+  echo "[ui] Building ${dir}"
   install_node_deps "$dir"
-  VITE_DEVICE3_URL="$UI_API_BASE" npm --prefix "$dir" run build
+  npm --prefix "$dir" run build
 }
 
-if [[ "$UI_ENABLE_WARP_CONSOLE" == "true" ]]; then
-  build_warp_console
+if [[ "$UI_ENABLE_DEVICE1" == "true" ]]; then
+  build_console "${APP_DIR}/ui/device1-console"
+  build_dashboard "${APP_DIR}/dashboard-device1"
 fi
 
-if [[ "$UI_ENABLE_DASHBOARD" == "true" ]]; then
-  build_dashboard
+if [[ "$UI_ENABLE_DEVICE2" == "true" ]]; then
+  build_console "${APP_DIR}/ui/device2-console"
+  build_dashboard "${APP_DIR}/dashboard-device2"
+fi
+
+if [[ "$UI_ENABLE_DEVICE3" == "true" ]]; then
+  build_console "${APP_DIR}/ui/warp-console"
+  build_dashboard "${APP_DIR}/dashboard"
 fi

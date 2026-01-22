@@ -1,0 +1,16 @@
+[Unit]
+Description=WARP UI Device 2 (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/warp/app/ui/device2-console
+ExecStart=/usr/bin/npm run start
+Restart=always
+EnvironmentFile=/etc/warp/env
+Environment=NODE_ENV=production
+Environment=PORT=3002
+
+[Install]
+WantedBy=multi-user.target

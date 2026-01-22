@@ -14,7 +14,7 @@ sudo ./bootstrap.sh --prod --app-ref v1.2.3
 - Installs OS packages, Python venv, vendor drivers/libraries
 - Writes `/etc/warp/env`
 - Pulls the app repo at the requested ref
-- Builds and runs both UIs (Next.js + Vite) by default
+- Builds and runs both UIs (Next.js + Vite) for devices 1/2/3
 - Installs and starts systemd services
 - Runs a smoke test
 
@@ -52,6 +52,11 @@ Skip UI setup:
 ```
 sudo ./bootstrap.sh --prod --no-ui --app-ref v1.2.3
 ```
+
+## Default ports
+- Device 1 API/UI: `8001`, `3001`, `5171`
+- Device 2 API/UI: `8002`, `3002`, `5172`
+- Device 3 API/UI: `8003`, `3003`, `5173`
 
 ## Logs
 Bootstrap logs to `/var/log/warp/bootstrap.log`.

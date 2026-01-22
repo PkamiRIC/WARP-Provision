@@ -1,0 +1,14 @@
+[Unit]
+Description=WARP Device 1 Backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/warp/app/devices/device1
+ExecStart=/opt/warp/venv/bin/python -m src.main --config /etc/warp/device1.yaml
+Restart=always
+EnvironmentFile=/etc/warp/env
+
+[Install]
+WantedBy=multi-user.target

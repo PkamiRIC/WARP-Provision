@@ -8,7 +8,11 @@ LOG_FILE="${LOG_DIR}/bootstrap.log"
 ENV_DIR="/etc/${PROJECT_NAME}"
 ENV_FILE="${ENV_DIR}/env"
 DEPLOY_DIR="${ROOT_DIR}/deploy"
-CONFIG_EXAMPLE="${ROOT_DIR}/config/device3.yaml.example"
+DEVICE_CONFIGS=(
+  "device1.yaml"
+  "device2.yaml"
+  "device3.yaml"
+)
 
 usage() {
   cat <<'EOF'
@@ -132,7 +136,7 @@ source "$ENV_FILE"
 set +a
 
 missing_vars=()
-for var in APP_REPO_URL APP_DIR VENV_DIR DEVICE_CONFIG; do
+for var in APP_REPO_URL APP_DIR VENV_DIR; do
   if [[ -z "${!var:-}" ]]; then
     missing_vars+=("$var")
   fi
@@ -149,15 +153,28 @@ if [[ ${#missing_vars[@]} -gt 0 ]]; then
   exit 1
 fi
 
-if [[ ! -f "$DEVICE_CONFIG" ]]; then
-  if [[ -f "$CONFIG_EXAMPLE" ]]; then
-    install -m 0640 "$CONFIG_EXAMPLE" "$DEVICE_CONFIG"
-    print_fail "Device config created at ${DEVICE_CONFIG} from example."
-    echo "  Edit it and re-run bootstrap." >&2
-    exit 1
+created_configs=()
+for cfg in "${DEVICE_CONFIGS[@]}"; do
+  target="${ENV_DIR}/${cfg}"
+  example="${ROOT_DIR}/config/${cfg}.example"
+  if [[ ! -f "$target" ]]; then
+    if [[ -f "$example" ]]; then
+      install -m 0640 "$example" "$target"
+      created_configs+=("$target")
+    else
+      print_fail "Missing device config: ${target}"
+      echo "  Example not found at ${example}" >&2
+      exit 1
+    fi
   fi
-  print_fail "Missing device config: ${DEVICE_CONFIG}"
-  echo "  Example not found at ${CONFIG_EXAMPLE}" >&2
+done
+
+if [[ ${#created_configs[@]} -gt 0 ]]; then
+  print_fail "Device config(s) created from example:"
+  for cfg in "${created_configs[@]}"; do
+    echo "  - ${cfg}" >&2
+  done
+  echo "Edit them and re-run bootstrap." >&2
   exit 1
 fi
 
