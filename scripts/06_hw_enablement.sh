@@ -58,15 +58,15 @@ if command -v raspi-config >/dev/null 2>&1; then
   raspi-config nonint do_spi 0
   raspi-config nonint do_serial 2 || true
   raspi-config nonint do_serial_hw 0 || true
-else
-  for cfg in "${CONFIG_FILES[@]}"; do
-    set_config_kv "$cfg" "dtparam=i2c_arm" "on"
-    set_config_kv "$cfg" "dtparam=spi" "on"
-    set_config_kv "$cfg" "enable_uart" "1"
-    ensure_overlay_line "$cfg" "$SPI_OVERLAY_LINE"
-    ensure_overlay_line "$cfg" "$SC16_OVERLAY_LINE"
-  done
 fi
+
+for cfg in "${CONFIG_FILES[@]}"; do
+  set_config_kv "$cfg" "dtparam=i2c_arm" "on"
+  set_config_kv "$cfg" "dtparam=spi" "on"
+  set_config_kv "$cfg" "enable_uart" "1"
+  ensure_overlay_line "$cfg" "$SPI_OVERLAY_LINE"
+  ensure_overlay_line "$cfg" "$SC16_OVERLAY_LINE"
+done
 
 enable_kernel_module "i2c-dev"
 enable_kernel_module "spi-bcm2835"
