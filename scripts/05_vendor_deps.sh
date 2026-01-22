@@ -56,16 +56,23 @@ install_librpiplc_from_git() {
 install_industrialshields_repo() {
   local repo_url="${INDUSTRIALSHIELDS_REPO_URL:-}"
   local list_file="/etc/apt/sources.list.d/industrialshields.list"
+  local keyring="/etc/apt/keyrings/industrialshields.gpg"
+  local key_url="https://apps.industrialshields.com/main/DebRepo/PublicKey.gpg"
 
   if [[ -z "$repo_url" ]]; then
     repo_url="https://apps.industrialshields.com/main/DebRepo/"
+  fi
+
+  if [[ ! -f "$keyring" ]]; then
+    mkdir -p /etc/apt/keyrings
+    curl -fsSL "$key_url" -o "$keyring"
   fi
 
   if [[ -f "$list_file" ]] && grep -q "$repo_url" "$list_file"; then
     return
   fi
 
-  echo "deb ${repo_url} ./" > "$list_file"
+  echo "deb [signed-by=${keyring}] ${repo_url} ./" > "$list_file"
   apt-get update
 }
 
