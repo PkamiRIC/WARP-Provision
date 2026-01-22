@@ -1,0 +1,16 @@
+[Unit]
+Description=WARP UI (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/warp/app/ui/warp-console
+ExecStart=/usr/bin/npm run start
+Restart=always
+EnvironmentFile=/etc/warp/env
+Environment=NODE_ENV=production
+Environment=PORT=${UI_WARP_CONSOLE_PORT}
+
+[Install]
+WantedBy=multi-user.target

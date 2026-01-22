@@ -29,6 +29,13 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
+set -a
+source "$ENV_FILE"
+set +a
+
+UI_ENABLE_WARP_CONSOLE="${UI_ENABLE_WARP_CONSOLE:-true}"
+UI_ENABLE_DASHBOARD="${UI_ENABLE_DASHBOARD:-true}"
+
 shopt -s nullglob
 service_files=("${DEPLOY_DIR}"/*.service)
 if [[ ${#service_files[@]} -eq 0 ]]; then
@@ -38,6 +45,14 @@ fi
 
 for svc_src in "${service_files[@]}"; do
   svc_name="$(basename "$svc_src")"
+  if [[ "$svc_name" == "warp-ui.service" && "$UI_ENABLE_WARP_CONSOLE" != "true" ]]; then
+    log "Skipping ${svc_name} (UI_ENABLE_WARP_CONSOLE=false)"
+    continue
+  fi
+  if [[ "$svc_name" == "warp-dashboard.service" && "$UI_ENABLE_DASHBOARD" != "true" ]]; then
+    log "Skipping ${svc_name} (UI_ENABLE_DASHBOARD=false)"
+    continue
+  fi
   svc_dest="${SYSTEMD_DIR}/${svc_name}"
   service_changed="false"
 

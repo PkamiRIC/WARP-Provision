@@ -12,12 +12,13 @@ CONFIG_EXAMPLE="${ROOT_DIR}/config/device3.yaml.example"
 
 usage() {
   cat <<'EOF'
-Usage: ./bootstrap.sh [--prod|--dev] [--no-hw] [--vnc] --app-ref <ref>
+Usage: ./bootstrap.sh [--prod|--dev] [--no-hw] [--vnc] [--no-ui] --app-ref <ref>
 
   --prod     Run in production mode (default)
   --dev      Run in development mode
   --no-hw    Skip hardware enablement step
   --vnc      Install VNC server
+  --no-ui    Skip UI setup (Next.js + Vite)
   --app-ref  App git tag/commit/branch to checkout
 EOF
 }
@@ -26,6 +27,7 @@ MODE="--prod"
 NO_HW="false"
 APP_REF=""
 VNC="false"
+NO_UI="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -43,6 +45,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --vnc)
       VNC="true"
+      shift
+      ;;
+    --no-ui)
+      NO_UI="true"
       shift
       ;;
     --app-ref)
@@ -164,6 +170,7 @@ SCRIPTS=(
   "scripts/04_python_deps.sh"
   "scripts/05_vendor_deps.sh"
   "scripts/06_hw_enablement.sh"
+  "scripts/10_ui_setup.sh"
   "scripts/07_services.sh"
   "scripts/08_security_hardening.sh"
   "scripts/09_smoke_test.sh"
@@ -176,6 +183,10 @@ for script in "${SCRIPTS[@]}"; do
     echo "Skipping hardware enablement: $script"
     continue
   fi
+  if [[ "$script" == "scripts/10_ui_setup.sh" && "$NO_UI" == "true" ]]; then
+    echo "Skipping UI setup: $script"
+    continue
+  fi
   if [[ ! -e "$script" ]]; then
     print_fail "Missing required script: $script"
     exit 1
@@ -185,15 +196,17 @@ for script in "${SCRIPTS[@]}"; do
     exit 1
   fi
   print_header "Running ${script}"
-  if [[ "$NO_HW" == "true" && "$VNC" == "true" ]]; then
-    "$script" "$MODE" "--no-hw" "--vnc"
-  elif [[ "$NO_HW" == "true" ]]; then
-    "$script" "$MODE" "--no-hw"
-  elif [[ "$VNC" == "true" ]]; then
-    "$script" "$MODE" "--vnc"
-  else
-    "$script" "$MODE"
+  script_args=("$MODE")
+  if [[ "$NO_HW" == "true" ]]; then
+    script_args+=("--no-hw")
   fi
+  if [[ "$VNC" == "true" ]]; then
+    script_args+=("--vnc")
+  fi
+  if [[ "$NO_UI" == "true" ]]; then
+    script_args+=("--no-ui")
+  fi
+  "$script" "${script_args[@]}"
   print_ok "${script} completed"
   SCRIPT_RESULTS+=("OK:${script}")
   if [[ "$script" == "scripts/02_python_env.sh" ]]; then

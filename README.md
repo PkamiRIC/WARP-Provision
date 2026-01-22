@@ -14,6 +14,7 @@ sudo ./bootstrap.sh --prod --app-ref v1.2.3
 - Installs OS packages, Python venv, vendor drivers/libraries
 - Writes `/etc/warp/env`
 - Pulls the app repo at the requested ref
+- Builds and runs both UIs (Next.js + Vite) by default
 - Installs and starts systemd services
 - Runs a smoke test
 
@@ -40,11 +41,16 @@ sudo ./bootstrap.sh --prod --app-ref v1.2.3
 - Development:
 ```
 sudo ./bootstrap.sh --dev --app-ref main
+```
 
 Optional VNC install:
 ```
 sudo ./bootstrap.sh --prod --vnc --app-ref v1.2.3
 ```
+
+Skip UI setup:
+```
+sudo ./bootstrap.sh --prod --no-ui --app-ref v1.2.3
 ```
 
 ## Logs
