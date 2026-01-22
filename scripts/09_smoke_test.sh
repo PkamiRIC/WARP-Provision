@@ -17,6 +17,7 @@ PING_HOST="${PING_HOST:-8.8.8.8}"
 PLC_SO_NAME="${PLC_SO_NAME:-librpiplc.so}"
 PLC_PY_MODULE="${PLC_PY_MODULE:-}"
 GPIO_TEST_CMD="${GPIO_TEST_CMD:-}"
+PLC_CHECK="${PLC_CHECK:-true}"
 PY_IMPORT_MODULE="${PY_IMPORT_MODULE:-src.main}"
 APP_DIR="${APP_DIR:-}"
 VENV_DIR="${VENV_DIR:-}"
@@ -45,6 +46,10 @@ PY
 
 check_plc_library() {
   log "Checking PLC library"
+  if [[ "$PLC_CHECK" == "skip" || "$PLC_CHECK" == "false" ]]; then
+    log "Skipping PLC library check"
+    return
+  fi
   if [[ -n "$PLC_PY_MODULE" ]]; then
     python - <<PY || exit 1
 import importlib
