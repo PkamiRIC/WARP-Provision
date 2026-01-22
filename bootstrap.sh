@@ -96,6 +96,10 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 
 print_header "Bootstrap Start"
 
+if [[ -d "${ROOT_DIR}/scripts" ]]; then
+  chmod +x "${ROOT_DIR}/scripts/"*.sh
+fi
+
 if [[ ! -f "$ENV_FILE" ]]; then
   if [[ ! -f "${DEPLOY_DIR}/env.example" ]]; then
     print_fail "Missing deploy/env.example"
