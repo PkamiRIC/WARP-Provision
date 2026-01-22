@@ -4,8 +4,15 @@ set -euo pipefail
 PROJECT_NAME="warp"
 INSTALL_ROOT="/usr/local"
 BUILD_ROOT="/tmp/${PROJECT_NAME}-vendor"
+ENV_FILE="/etc/warp/env"
 
 mkdir -p "$BUILD_ROOT"
+
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  source "$ENV_FILE"
+  set +a
+fi
 
 log() {
   echo "[vendor] $*"
@@ -44,6 +51,51 @@ install_librpiplc_from_git() {
   git clone --depth 1 --branch "$tag" "$repo_url" "$workdir"
   make -C "$workdir"
   make -C "$workdir" install PREFIX="$INSTALL_ROOT"
+}
+
+install_industrialshields_repo() {
+  local repo_url="${INDUSTRIALSHIELDS_REPO_URL:-}"
+  local list_file="/etc/apt/sources.list.d/industrialshields.list"
+
+  if [[ -z "$repo_url" ]]; then
+    repo_url="https://apps.industrialshields.com/main/DebRepo/"
+  fi
+
+  if [[ -f "$list_file" ]] && grep -q "$repo_url" "$list_file"; then
+    return
+  fi
+
+  echo "deb ${repo_url} ./" > "$list_file"
+  apt-get update
+}
+
+install_industrialshields_packages() {
+  install_industrialshields_repo
+
+  local librpiplc_version="${LIBRPIPLC_VERSION:-}"
+  local py_librpiplc_version="${PYTHON3_LIBRPIPLC_VERSION:-}"
+
+  if [[ -n "$librpiplc_version" ]]; then
+    if ! dpkg -s librpiplc >/dev/null 2>&1 || \
+      ! dpkg -s librpiplc | grep -q "Version: ${librpiplc_version}"; then
+      apt-get install -y "librpiplc=${librpiplc_version}"
+    fi
+  else
+    if ! dpkg -s librpiplc >/dev/null 2>&1; then
+      apt-get install -y librpiplc
+    fi
+  fi
+
+  if [[ -n "$py_librpiplc_version" ]]; then
+    if ! dpkg -s python3-librpiplc >/dev/null 2>&1 || \
+      ! dpkg -s python3-librpiplc | grep -q "Version: ${py_librpiplc_version}"; then
+      apt-get install -y "python3-librpiplc=${py_librpiplc_version}"
+    fi
+  else
+    if ! dpkg -s python3-librpiplc >/dev/null 2>&1; then
+      apt-get install -y python3-librpiplc
+    fi
+  fi
 }
 
 install_deb_with_checksum() {
@@ -97,6 +149,9 @@ LIBRPIPLC_REPO="https://example.com/industrial-shields/librpiplc.git"
 LIBRPIPLC_TAG="v0.0.0"
 
 # install_librpiplc_from_git "$LIBRPIPLC_REPO" "$LIBRPIPLC_TAG"
+
+# Install Industrial Shields apt repo + packages.
+install_industrialshields_packages
 
 # --- Custom .deb / .so / binary installs (examples) ---
 # install_deb_with_checksum "https://example.com/vendor/foo_1.2.3_arm64.deb" \
