@@ -51,9 +51,13 @@ filter_available_packages() {
   local pkg
   for pkg in "$@"; do
     if apt-cache policy "$pkg" 2>/dev/null | grep -q 'Candidate:'; then
-      result+=("$pkg")
+      if apt-cache policy "$pkg" 2>/dev/null | grep -q 'Candidate: (none)'; then
+        echo "[os] Skipping unavailable package: $pkg" >&2
+      else
+        result+=("$pkg")
+      fi
     else
-      echo "[os] Skipping unavailable package: $pkg"
+      echo "[os] Skipping unavailable package: $pkg" >&2
     fi
   done
   printf '%s\n' "${result[@]}"
