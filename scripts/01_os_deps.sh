@@ -46,6 +46,19 @@ hw_packages=(
   spi-tools
 )
 
+filter_available_packages() {
+  local result=()
+  local pkg
+  for pkg in "$@"; do
+    if apt-cache policy "$pkg" 2>/dev/null | grep -q 'Candidate:'; then
+      result+=("$pkg")
+    else
+      echo "[os] Skipping unavailable package: $pkg"
+    fi
+  done
+  printf '%s\n' "${result[@]}"
+}
+
 missing_packages=()
 for pkg in "${core_packages[@]}" "${python_packages[@]}" "${network_packages[@]}"; do
   if ! dpkg -s "$pkg" >/dev/null 2>&1; then
@@ -71,7 +84,11 @@ fi
 
 if [[ "$NO_HW" != "true" ]]; then
   missing_hw=()
-  for pkg in "${hw_packages[@]}"; do
+  available_hw=()
+  while IFS= read -r pkg; do
+    [[ -n "$pkg" ]] && available_hw+=("$pkg")
+  done < <(filter_available_packages "${hw_packages[@]}")
+  for pkg in "${available_hw[@]}"; do
     if ! dpkg -s "$pkg" >/dev/null 2>&1; then
       missing_hw+=("$pkg")
     fi
